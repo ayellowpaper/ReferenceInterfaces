@@ -76,6 +76,7 @@ internal class ObjectSelectorWindow : EditorWindow
 		_listView.onSelectionChange += ItemSelectionChanged;
 		_listView.onItemsChosen += ItemsChosen;
 		_listView.style.flexGrow = 1;
+		_listView.style.backgroundColor = new StyleColor(new Color(0.2f, 0.2f, 0.2f));
 		rootVisualElement.Add(_listView);
 
 		_detailsLabel = new Label();
