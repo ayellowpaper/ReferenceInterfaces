@@ -1,0 +1,16 @@
+{
+  "name": "com.zelude.objectwithinterface",
+  "version": "1.0.0",
+  "displayName": "Object with interface",
+  "description": "Allows you to easily reference objects with interfaces in the inspector.",
+  "unity": "2020.3",
+  "keywords": [
+    "package",
+    "template"
+  ],
+  "author": {
+    "name": "Lucas Wilke",
+    "email": "ayellowpaperatwork@gmail.com",
+    "url": "https://www.ayellowpaper.com"
+  }
+}
