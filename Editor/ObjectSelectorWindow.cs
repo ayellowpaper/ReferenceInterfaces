@@ -24,7 +24,7 @@ namespace Zelude.Editor
 
 		private Action<Object> _selectionChangedCallback;
 		private Action<Object, bool> _selectorClosedCallback;
-		private Func<Object, bool> _filterCallback;
+		private ObjectSelectorFilter _filter;
 		private SerializedProperty _editingProperty;
 		private List<ItemInfo> _filteredItems;
 		private ToolbarSearchField _searchbox;
@@ -37,9 +37,11 @@ namespace Zelude.Editor
 		private Tab _sceneTab;
 		private Tab _assetsTab;
 
+		private static ItemInfo _nullItem = new ItemInfo() { InstanceID = null, Label = "None" };
+
 		public bool initialized { get; private set; } = false;
 
-		public string searchText
+		public string SearchText
 		{
 			get => _searchText;
 			set
@@ -51,14 +53,14 @@ namespace Zelude.Editor
 
 		public List<ItemInfo> allItems { get; private set; }
 
-		public static void Show(SerializedProperty property, Action<Object> onSelectionChanged, Action<Object, bool> onSelectorClosed, Func<Object, bool> filterCallback)
+		public static void Show(SerializedProperty property, Action<Object> onSelectionChanged, Action<Object, bool> onSelectorClosed, ObjectSelectorFilter filter)
 		{
 			if (Instance == null)
 				Instance = ScriptableObject.CreateInstance<ObjectSelectorWindow>();
 			Instance._editingProperty = property;
 			Instance._selectionChangedCallback = onSelectionChanged;
 			Instance._selectorClosedCallback = onSelectorClosed;
-			Instance._filterCallback = filterCallback ?? (x => true);
+			Instance._filter = filter;
 			Instance.Init();
 			// Instance.ShowAuxWindow();
 			Instance.Show();
@@ -137,13 +139,11 @@ namespace Zelude.Editor
 			// if ((s_Context.visibleObjects & VisibleObjects.Scene) == VisibleObjects.Scene)
 			// 	allItems.AddRange(FetchAllGameObjects());
 
-			var empty = new ItemInfo() { InstanceID = null, Label = "None" };
-
+			// allItems.AddRange(FetchAllAssets());
 			allItems.AddRange(FetchAllComponents());
 			allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
-			allItems.Insert(0, empty);
 
-			_filteredItems.AddRange(allItems);
+			FilterItems();
 		}
 
 
@@ -163,15 +163,16 @@ namespace Zelude.Editor
 
 		private void SearchFilterChanged(ChangeEvent<string> evt)
 		{
-			searchText = evt.newValue;
+			SearchText = evt.newValue;
 		}
 
 		private void FilterItems()
 		{
 			_filteredItems.Clear();
-			_filteredItems.AddRange(allItems.Where(item => string.IsNullOrEmpty(searchText) || item.Label.IndexOf(searchText, StringComparison.InvariantCultureIgnoreCase) >= 0));
+			_filteredItems.Add(_nullItem);
+			_filteredItems.AddRange(allItems.Where(item => string.IsNullOrEmpty(SearchText) || item.Label.IndexOf(SearchText, StringComparison.InvariantCultureIgnoreCase) >= 0));
 
-			_listView.Refresh();
+			_listView?.Refresh();
 		}
 
 		private void BindItem(VisualElement listItem, int index)
@@ -232,9 +233,16 @@ namespace Zelude.Editor
 			}
 
 			var obj = EditorUtility.InstanceIDToObject((int)_currentItem.InstanceID);
-			var transform = (obj is GameObject go) ? go.transform : (obj as Component).transform;
-			int compIndex = Array.IndexOf(transform.gameObject.GetComponents(typeof(Component)), obj);
-			_detailsLabel.text = $"{GetTransformPath(transform)} [{compIndex}]";
+			if (AssetDatabase.Contains(obj))
+			{
+				_detailsLabel.text = AssetDatabase.GetAssetPath(obj);
+			}
+			else
+			{
+				var transform = (obj is GameObject go) ? go.transform : (obj as Component).transform;
+				int compIndex = Array.IndexOf(transform.gameObject.GetComponents(typeof(Component)), obj);
+				_detailsLabel.text = $"{GetTransformPath(transform)} [{compIndex}]";
+			}
 		}
 
 		private string GetTransformPath(Transform tr)
@@ -251,25 +259,14 @@ namespace Zelude.Editor
 
 		private IEnumerable<ItemInfo> FetchAllAssets()
 		{
-			var allPaths = AssetDatabase.GetAllAssetPaths();
-			if (allPaths == null)
-				yield break;
+			var property = new HierarchyProperty(HierarchyType.Assets, false);
+			property.SetSearchFilter(_filter.AssetSearchFilter, 0);
 
-			var requiredTypes = new List<string>();
-			foreach (var path in allPaths)
+			while (property.Next(null))
 			{
-				var type = AssetDatabase.GetMainAssetTypeAtPath(path);
-				var typeName = type.FullName ?? "";
-				if (requiredTypes.Any(requiredType => typeName.Contains(requiredType)))
-				{
-					var asset = AssetDatabase.LoadMainAssetAtPath(path);
-					var matchFilterConstraint = _filterCallback?.Invoke(asset);
-					if (matchFilterConstraint.HasValue && !matchFilterConstraint.Value)
-						continue;
-					var instanceId = asset?.GetInstanceID() ?? 0;
-					yield return new ItemInfo { InstanceID = instanceId, Label = path };
-				}
+				yield return new ItemInfo { Icon = property.icon, InstanceID = property.instanceID, Label = property.name };
 			}
+			yield break;
 		}
 
 		private IEnumerable<ItemInfo> FetchAllComponents()
@@ -294,7 +291,7 @@ namespace Zelude.Editor
 
 		private bool CheckFilter(UnityEngine.Object obj)
 		{
-			var matchFilterConstraint = _filterCallback?.Invoke(obj);
+			var matchFilterConstraint = _filter.SceneFilterCallback?.Invoke(obj);
 			return (!matchFilterConstraint.HasValue || matchFilterConstraint.Value);
 		}
 
@@ -302,6 +299,20 @@ namespace Zelude.Editor
 		{
 			if (_currentItem == null || _currentItem.InstanceID == null) return null;
 			return EditorUtility.InstanceIDToObject((int)_currentItem.InstanceID);
+		}
+	}
+
+	public class ObjectSelectorFilter
+	{
+		public string AssetSearchFilter;
+		public Func<Object, bool> SceneFilterCallback;
+
+		public ObjectSelectorFilter() : this("", x => true) { }
+
+		public ObjectSelectorFilter(string assetSearchFilter, Func<Object, bool> sceneFilterCallback)
+		{
+			AssetSearchFilter = assetSearchFilter;
+			SceneFilterCallback = sceneFilterCallback;
 		}
 	}
 }

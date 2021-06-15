@@ -1,3 +1,4 @@
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -36,7 +37,17 @@ namespace Zelude.Editor
 		{
 			var win = EditorWindow.focusedWindow;
 			win.Close();
-			ObjectSelectorWindow.Show(property, obj => { property.objectReferenceValue = obj; property.serializedObject.ApplyModifiedProperties(); }, (obj, success) => { if (success) property.objectReferenceValue = obj; }, obj => interfaceType.IsAssignableFrom(obj.GetType()) && objectType.IsAssignableFrom(obj.GetType()));
+
+			var derivedTypes = TypeCache.GetTypesDerivedFrom(interfaceType);
+			var sb = new StringBuilder();
+			foreach (var type in derivedTypes)
+			{
+				if (objectType.IsAssignableFrom(type))
+					sb.Append("t:" + type.FullName + " ");
+			}
+
+			var filter = new ObjectSelectorFilter(sb.ToString(), obj => interfaceType.IsAssignableFrom(obj.GetType()) && objectType.IsAssignableFrom(obj.GetType()));
+			ObjectSelectorWindow.Show(property, obj => { property.objectReferenceValue = obj; property.serializedObject.ApplyModifiedProperties(); }, (obj, success) => { if (success) property.objectReferenceValue = obj; }, filter);
 			ObjectSelectorWindow.Instance.position = win.position;
 			ObjectSelectorWindow.Instance.titleContent = win.titleContent;
 			_queuedOpening = false;
