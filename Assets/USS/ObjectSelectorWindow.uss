@@ -1,0 +1,58 @@
+﻿Tab
+{
+	align-self: flex-start;
+	border-color: #232323;
+	border-width: 1px 1px 0px 1px;
+	border-top-left-radius: 3px;
+	border-top-right-radius: 3px;
+	margin: 0;
+}
+
+Tab:hover
+{
+	background-color: #303030;
+}
+
+Tab, Tab:active
+{
+	background-color: #3C3C3C;
+}
+
+Tab:checked
+{
+	background-color: #333333;
+}
+
+Tab #unity-checkmark
+{
+	display: none;
+}
+
+Tab > .unity-base-field__input
+{
+	flex-grow: 0;
+	padding: 1px 2px 1px 2px;
+}
+
+ListView
+{
+	flex-grow: 1;
+	background-color: #333333;
+	border-color: #232323;
+	border-top-width: 1px;
+}
+
+ToolbarSearchField
+{
+	width: auto;
+}
+
+.details
+{
+	background-color: #2A2A2A;
+	color: #AAAAAA;
+	border-color: #404040;
+	border-width: 1px 0 0 0;
+	padding: 4px 0px 2px 20px;
+	font-size: 12px;
+}
