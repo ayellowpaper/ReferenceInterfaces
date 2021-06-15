@@ -1,7 +1,12 @@
-﻿Tab
+﻿:root
+{
+	--dark-border-color: #232323;
+}
+
+Tab
 {
 	align-self: flex-start;
-	border-color: #232323;
+	color: rgba(0, 0, 0, 0);
 	border-width: 1px 1px 0px 1px;
 	border-top-left-radius: 3px;
 	border-top-right-radius: 3px;
@@ -11,16 +16,19 @@
 Tab:hover
 {
 	background-color: #303030;
+	border-color: rgba(0, 0, 0, 0);
 }
 
-Tab, Tab:active
+Tab:active
 {
-	background-color: #3C3C3C;
+	background-color: #434343;
+	border-color: var(--dark-border-color);
 }
 
 Tab:checked
 {
 	background-color: #333333;
+	border-color: var(--dark-border-color);
 }
 
 Tab #unity-checkmark
@@ -38,7 +46,7 @@ ListView
 {
 	flex-grow: 1;
 	background-color: #333333;
-	border-color: #232323;
+	border-color: var(--dark-border-color);
 	border-top-width: 1px;
 }
 
