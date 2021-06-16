@@ -1,3 +1,4 @@
+using System.Xml.Linq;
 using System.Data.Common;
 using System.Text;
 using System;
@@ -27,12 +28,13 @@ namespace Zelude.Editor
 		private ObjectSelectorFilter _filter;
 		private SerializedProperty _editingProperty;
 		private List<ItemInfo> _filteredItems;
-		private ToolbarSearchField _searchbox;
-		private ListView _listView;
-		private Label _detailsLabel;
 		private string _searchText;
 		private ItemInfo _currentItem;
 		private bool _userCanceled = true;
+		private bool _showSceneObjects = true;
+		private ToolbarSearchField _searchbox;
+		private ListView _listView;
+		private Label _detailsLabel;
 		private int _undoGroup;
 		private Tab _sceneTab;
 		private Tab _assetsTab;
@@ -77,7 +79,6 @@ namespace Zelude.Editor
 			_searchbox.RegisterValueChangedCallback(SearchFilterChanged);
 			rootVisualElement.Add(_searchbox);
 
-
 			var tabContainer = new VisualElement();
 			tabContainer.style.flexDirection = FlexDirection.Row;
 			_assetsTab = new Tab("Assets");
@@ -115,6 +116,10 @@ namespace Zelude.Editor
 
 		private void HandleGroupChanged(object sender, Toggle toggle)
 		{
+			if (_showSceneObjects && toggle == this._sceneTab) return;
+			_showSceneObjects = !_showSceneObjects;
+			PopulateItems();
+			FilterItems();
 		}
 
 		private void OnDisable()
@@ -134,18 +139,20 @@ namespace Zelude.Editor
 			allItems = new List<ItemInfo>();
 			_filteredItems = new List<ItemInfo>();
 
-			// if ((s_Context.visibleObjects & VisibleObjects.Assets) == VisibleObjects.Assets)
-			// 	allItems.AddRange(FetchAllAssets());
-			// if ((s_Context.visibleObjects & VisibleObjects.Scene) == VisibleObjects.Scene)
-			// 	allItems.AddRange(FetchAllGameObjects());
-
-			// allItems.AddRange(FetchAllAssets());
-			allItems.AddRange(FetchAllComponents());
-			allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
-
+			PopulateItems();
 			FilterItems();
 		}
 
+		private void PopulateItems()
+		{
+			allItems.Clear();
+			_filteredItems.Clear();
+			if (_showSceneObjects)
+				allItems.AddRange(FetchAllComponents());
+			else
+				allItems.AddRange(FetchAllAssets());
+			allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
+		}
 
 		private void FinishInit()
 		{

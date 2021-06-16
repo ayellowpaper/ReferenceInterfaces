@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Zelude
 {
 	[System.Serializable]
-	public class InterfaceObject<UObject, TInterface> where UObject : Object where TInterface : class
+	public class InterfaceObject<TInterface, UObject> where UObject : Object where TInterface : class
 	{
 		[SerializeField]
 		private UObject _underlyingValue;
@@ -17,11 +17,11 @@ namespace Zelude
 		public InterfaceObject(UObject target) => _underlyingValue = target;
 		public InterfaceObject(TInterface @interface) => _underlyingValue = @interface as UObject;
 
-		public static implicit operator TInterface(InterfaceObject<UObject, TInterface> obj) => obj.Value;
+		public static implicit operator TInterface(InterfaceObject<TInterface, UObject> obj) => obj.Value;
 	}
 
 	[System.Serializable]
-	public class InterfaceObject<Interface> : InterfaceObject<Object, Interface> where Interface : class
+	public class InterfaceObject<TInterface> : InterfaceObject<TInterface, Object> where TInterface : class
 	{
 	}
 }
