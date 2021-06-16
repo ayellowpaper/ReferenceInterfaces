@@ -195,11 +195,9 @@ namespace Zelude.Editor
 			ve.Add(image);
 			ve.Add(label);
 
-			ve.style.flexDirection = FlexDirection.Row;
-			ve.style.paddingLeft = 17;
-			label.style.flexGrow = 1;
-			label.style.paddingLeft = 3;
-			image.style.flexBasis = 14;
+			ve.AddToClassList("list-item");
+			label.AddToClassList("list-item__text");
+			image.AddToClassList("list-item__icon");
 
 			return ve;
 		}
@@ -245,14 +243,14 @@ namespace Zelude.Editor
 			}
 		}
 
-		private string GetTransformPath(Transform tr)
+		private string GetTransformPath(Transform transform)
 		{
 			StringBuilder sb = new StringBuilder();
-			sb.Append(tr.name);
-			while (tr.parent != null)
+			sb.Append(transform.name);
+			while (transform.parent != null)
 			{
-				sb.Insert(0, tr.parent.name + "/");
-				tr = tr.parent;
+				sb.Insert(0, transform.parent.name + "/");
+				transform = transform.parent;
 			}
 			return sb.ToString();
 		}

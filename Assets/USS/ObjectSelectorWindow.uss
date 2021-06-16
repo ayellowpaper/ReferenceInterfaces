@@ -64,3 +64,20 @@ ToolbarSearchField
 	padding: 4px 0px 2px 20px;
 	font-size: 12px;
 }
+
+.list-item
+{
+	padding-left:  17px;
+	flex-direction: row;
+}
+
+.list-item__text
+{
+	flex-grow: 1;
+	padding-left: 3px;
+}
+
+.list-item__icon
+{
+	flex-basis: 14px;
+}
