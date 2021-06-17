@@ -8,6 +8,7 @@ namespace Zelude
 	public class InterfaceObject<TInterface, UObject> where UObject : Object where TInterface : class
 	{
 		[SerializeField]
+		[HideInInspector]
 		private UObject _underlyingValue;
 
 		public Object UnderlyingValue => _underlyingValue;

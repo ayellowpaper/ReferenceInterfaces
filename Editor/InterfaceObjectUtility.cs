@@ -28,23 +28,22 @@ namespace Zelude.Editor
 				_style.alignment = TextAnchor.MiddleRight;
 			}
 
-			EditorGUI.BeginChangeCheck();
 			var prevValue = property.objectReferenceValue;
 
 			var prevEnabledState = GUI.enabled;
 			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args))
 				GUI.enabled = false;
 
+			EditorGUI.BeginChangeCheck();
 			EditorGUI.ObjectField(position, property, args.ObjectType, label);
-
-			GUI.enabled = prevEnabledState;
-
 			if (EditorGUI.EndChangeCheck())
 			{
 				var newVal = property.objectReferenceValue;
 				if (!(newVal == null || CanAssign(newVal, args)))
 					property.objectReferenceValue = prevValue;
 			}
+
+			GUI.enabled = prevEnabledState;
 
 			var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
 			if (Event.current.type == EventType.Repaint)
@@ -54,6 +53,7 @@ namespace Zelude.Editor
 				interfaceLabelPosition.width -= 22;
 				_style.Draw(interfaceLabelPosition, new GUIContent(displayString), controlID, DragAndDrop.activeControlID == controlID, position.Contains(Event.current.mousePosition));
 			}
+
 			var currentObjectPickerID = EditorGUIUtility.GetObjectPickerControlID();
 			if (controlID == currentObjectPickerID && _isOpeningQueued == false)
 			{
