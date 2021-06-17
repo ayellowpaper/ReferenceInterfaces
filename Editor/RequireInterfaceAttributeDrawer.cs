@@ -11,7 +11,8 @@ namespace Zelude.Editor
 
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
-			InterfaceObjectUtility.OnGUI(position, property, label, fieldInfo.FieldType, _requireInterfaceAttribute.InterfaceType);
+			InterfaceObjectArguments args = new InterfaceObjectArguments(fieldInfo.FieldType, _requireInterfaceAttribute.InterfaceType);
+			InterfaceObjectUtility.OnGUI(position, property, label, args);
 		}
 	}
 }

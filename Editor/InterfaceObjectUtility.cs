@@ -16,7 +16,7 @@ namespace Zelude.Editor
 		private static GUIStyle _style;
 		private static bool _isOpeningQueued = false;
 
-		public static void OnGUI(Rect position, SerializedProperty property, GUIContent label, Type objectType, Type interfaceType)
+		public static void OnGUI(Rect position, SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
 		{
 			if (_style == null)
 			{
@@ -28,31 +28,28 @@ namespace Zelude.Editor
 				_style.alignment = TextAnchor.MiddleRight;
 			}
 
-			Debug.Assert(typeof(UnityEngine.Object).IsAssignableFrom(objectType), $"{nameof(objectType)} needs to be of Type {typeof(UnityEngine.Object)}.", property.serializedObject.targetObject);
-			Debug.Assert(interfaceType.IsInterface, $"{nameof(interfaceType)} needs to be an interface.", property.serializedObject.targetObject);
-
 			EditorGUI.BeginChangeCheck();
 			var prevValue = property.objectReferenceValue;
 
 			var prevEnabledState = GUI.enabled;
-			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, objectType, interfaceType))
+			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args))
 				GUI.enabled = false;
 
-			EditorGUI.ObjectField(position, property, objectType, label);
+			EditorGUI.ObjectField(position, property, args.ObjectType, label);
 
 			GUI.enabled = prevEnabledState;
 
 			if (EditorGUI.EndChangeCheck())
 			{
 				var newVal = property.objectReferenceValue;
-				if (!(newVal == null || CanAssign(newVal, objectType, interfaceType)))
+				if (!(newVal == null || CanAssign(newVal, args)))
 					property.objectReferenceValue = prevValue;
 			}
 
 			var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
 			if (Event.current.type == EventType.Repaint)
 			{
-				var displayString = $"({ObjectNames.NicifyVariableName(interfaceType.Name)})";
+				var displayString = $"({ObjectNames.NicifyVariableName(args.InterfaceType.Name)})";
 				var interfaceLabelPosition = position;
 				interfaceLabelPosition.width -= 22;
 				_style.Draw(interfaceLabelPosition, new GUIContent(displayString), controlID, DragAndDrop.activeControlID == controlID, position.Contains(Event.current.mousePosition));
@@ -63,34 +60,48 @@ namespace Zelude.Editor
 				if (EditorWindow.focusedWindow != null)
 				{
 					_isOpeningQueued = true;
-					EditorApplication.delayCall += () => OpenDelayed(property, objectType, interfaceType);
+					EditorApplication.delayCall += () => OpenDelayed(property, args);
 				}
 			}
 		}
 
-		private static void OpenDelayed(SerializedProperty property, Type objectType, Type interfaceType)
+		private static void OpenDelayed(SerializedProperty property, InterfaceObjectArguments args)
 		{
 			var win = EditorWindow.focusedWindow;
 			win.Close();
 
-			var derivedTypes = TypeCache.GetTypesDerivedFrom(interfaceType);
+			var derivedTypes = TypeCache.GetTypesDerivedFrom(args.InterfaceType);
 			var sb = new StringBuilder();
 			foreach (var type in derivedTypes)
 			{
-				if (objectType.IsAssignableFrom(type))
+				if (args.ObjectType.IsAssignableFrom(type))
 					sb.Append("t:" + type.FullName + " ");
 			}
 
-			var filter = new ObjectSelectorFilter(sb.ToString(), obj => CanAssign(obj, interfaceType, objectType));
+			var filter = new ObjectSelectorFilter(sb.ToString(), obj => CanAssign(obj, args));
 			ObjectSelectorWindow.Show(property, obj => { property.objectReferenceValue = obj; property.serializedObject.ApplyModifiedProperties(); }, (obj, success) => { if (success) property.objectReferenceValue = obj; }, filter);
 			ObjectSelectorWindow.Instance.position = win.position;
-			var content = new GUIContent($"Select {objectType.Name} ({interfaceType.Name})");
+			var content = new GUIContent($"Select {args.ObjectType.Name} ({args.InterfaceType.Name})");
 			ObjectSelectorWindow.Instance.titleContent = content;
 			_isOpeningQueued = false;
 		}
 
-		private static bool CanAssign(UnityEngine.Object[] objects, Type objectType, Type interfaceType) => objects.All(obj => CanAssign(obj, objectType, interfaceType));
+		private static bool CanAssign(UnityEngine.Object[] objects, InterfaceObjectArguments args) => objects.All(obj => CanAssign(obj, args));
 
-		private static bool CanAssign(UnityEngine.Object obj, Type objectType, Type interfaceType) => interfaceType.IsAssignableFrom(obj.GetType()) && objectType.IsAssignableFrom(obj.GetType());
+		private static bool CanAssign(UnityEngine.Object obj, InterfaceObjectArguments args) => args.InterfaceType.IsAssignableFrom(obj.GetType()) && args.ObjectType.IsAssignableFrom(obj.GetType());
+	}
+
+	public struct InterfaceObjectArguments
+	{
+		public Type ObjectType;
+		public Type InterfaceType;
+
+		public InterfaceObjectArguments(Type objectType, Type interfaceType)
+		{
+			Debug.Assert(typeof(UnityEngine.Object).IsAssignableFrom(objectType), $"{nameof(objectType)} needs to be of Type {typeof(UnityEngine.Object)}.");
+			Debug.Assert(interfaceType.IsInterface, $"{nameof(interfaceType)} needs to be an interface.");
+			ObjectType = objectType;
+			InterfaceType = interfaceType;
+		}
 	}
 }

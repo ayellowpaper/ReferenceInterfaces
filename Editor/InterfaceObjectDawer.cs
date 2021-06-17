@@ -19,7 +19,8 @@ namespace Zelude.Editor
 		{
 			var prop = property.FindPropertyRelative(_fieldName);
 			GetObjectAndInterfaceType(fieldInfo.FieldType, out var objectType, out var interfaceType);
-			InterfaceObjectUtility.OnGUI(position, prop, label, objectType, interfaceType);
+			InterfaceObjectArguments args = new InterfaceObjectArguments(objectType, interfaceType);
+			InterfaceObjectUtility.OnGUI(position, prop, label, args);
 		}
 
 		private static void GetObjectAndInterfaceType(Type fieldType, out Type objectType, out Type interfaceType)
