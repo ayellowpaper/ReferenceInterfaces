@@ -65,6 +65,11 @@ namespace Zelude.Editor
 			}
 		}
 
+		public static bool IsAsset(Type type)
+		{
+			return !(type == typeof(GameObject) || type == typeof(Component));
+		}
+
 		private static void OpenDelayed(SerializedProperty property, InterfaceObjectArguments args)
 		{
 			var win = EditorWindow.focusedWindow;

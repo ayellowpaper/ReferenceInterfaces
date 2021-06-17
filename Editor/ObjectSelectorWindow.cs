@@ -27,15 +27,16 @@ namespace Zelude.Editor
 		private Action<Object, bool> _selectorClosedCallback;
 		private ObjectSelectorFilter _filter;
 		private SerializedProperty _editingProperty;
+		private List<ItemInfo> _allItems;
 		private List<ItemInfo> _filteredItems;
-		private string _searchText;
 		private ItemInfo _currentItem;
+		private string _searchText;
 		private bool _userCanceled = true;
 		private bool _showSceneObjects = true;
+		private int _undoGroup;
 		private ToolbarSearchField _searchbox;
 		private ListView _listView;
 		private Label _detailsLabel;
-		private int _undoGroup;
 		private Tab _sceneTab;
 		private Tab _assetsTab;
 
@@ -52,8 +53,6 @@ namespace Zelude.Editor
 				FilterItems();
 			}
 		}
-
-		public List<ItemInfo> allItems { get; private set; }
 
 		public static void Show(SerializedProperty property, Action<Object> onSelectionChanged, Action<Object, bool> onSelectorClosed, ObjectSelectorFilter filter)
 		{
@@ -87,12 +86,6 @@ namespace Zelude.Editor
 			tabContainer.Add(_sceneTab);
 			rootVisualElement.Add(tabContainer);
 
-			var toggleGroup = new ToggleGroup();
-			toggleGroup.RegisterToggle(_assetsTab);
-			toggleGroup.RegisterToggle(_sceneTab);
-			_sceneTab.SetValueWithoutNotify(true);
-			toggleGroup.OnToggleChanged += HandleGroupChanged;
-
 			_listView = new ListView(_filteredItems, 16, MakeItem, BindItem);
 			_listView.onSelectionChange += ItemSelectionChanged;
 			_listView.onItemsChosen += ItemsChosen;
@@ -102,14 +95,22 @@ namespace Zelude.Editor
 			_detailsLabel.AddToClassList("details");
 			rootVisualElement.Add(_detailsLabel);
 
-			// Initialize selection
-			// if (s_Context.currentObject != null)
-			// {
-			// 	var currentSelectedId = s_Context.currentObject.GetInstanceID();
-			// 	var selectedIndex = m_FilteredItems.FindIndex(item => item.instanceId == currentSelectedId);
-			// 	if (selectedIndex >= 0)
-			// 		m_ListView.selectedIndex = selectedIndex;
-			// }
+			Tab activeTab = _showSceneObjects ? _sceneTab : _assetsTab;
+			activeTab.SetValueWithoutNotify(true);
+
+			var toggleGroup = new ToggleGroup();
+			toggleGroup.RegisterToggle(_assetsTab);
+			toggleGroup.RegisterToggle(_sceneTab);
+			toggleGroup.OnToggleChanged += HandleGroupChanged;
+
+			var targetObject = _editingProperty.objectReferenceValue;
+			if (targetObject)
+			{
+				int instanceID = targetObject.GetInstanceID();
+				var index = _filteredItems.FindIndex(x => x.InstanceID == instanceID);
+				if (index >= 0)
+					_listView.selectedIndex = index;
+			}
 
 			FinishInit();
 		}
@@ -136,8 +137,13 @@ namespace Zelude.Editor
 		{
 			_undoGroup = Undo.GetCurrentGroup();
 			_searchText = "";
-			allItems = new List<ItemInfo>();
+			_allItems = new List<ItemInfo>();
 			_filteredItems = new List<ItemInfo>();
+
+			_showSceneObjects = true;
+			var target = _editingProperty.objectReferenceValue;
+			if (target != null)
+				_showSceneObjects = !AssetDatabase.Contains(target);
 
 			PopulateItems();
 			FilterItems();
@@ -145,13 +151,13 @@ namespace Zelude.Editor
 
 		private void PopulateItems()
 		{
-			allItems.Clear();
+			_allItems.Clear();
 			_filteredItems.Clear();
 			if (_showSceneObjects)
-				allItems.AddRange(FetchAllComponents());
+				_allItems.AddRange(FetchAllComponents());
 			else
-				allItems.AddRange(FetchAllAssets());
-			allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
+				_allItems.AddRange(FetchAllAssets());
+			_allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
 		}
 
 		private void FinishInit()
@@ -177,7 +183,7 @@ namespace Zelude.Editor
 		{
 			_filteredItems.Clear();
 			_filteredItems.Add(_nullItem);
-			_filteredItems.AddRange(allItems.Where(item => string.IsNullOrEmpty(SearchText) || item.Label.IndexOf(SearchText, StringComparison.InvariantCultureIgnoreCase) >= 0));
+			_filteredItems.AddRange(_allItems.Where(item => string.IsNullOrEmpty(SearchText) || item.Label.IndexOf(SearchText, StringComparison.InvariantCultureIgnoreCase) >= 0));
 
 			_listView?.Refresh();
 		}
