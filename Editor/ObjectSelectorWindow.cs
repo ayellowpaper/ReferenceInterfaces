@@ -64,8 +64,8 @@ namespace Zelude.Editor
 			Instance._selectorClosedCallback = onSelectorClosed;
 			Instance._filter = filter;
 			Instance.Init();
-			// Instance.ShowAuxWindow();
-			Instance.Show();
+			Instance.ShowAuxWindow();
+			//Instance.Show();
 		}
 
 		private void Init()
@@ -90,7 +90,7 @@ namespace Zelude.Editor
 			var toggleGroup = new ToggleGroup();
 			toggleGroup.RegisterToggle(_assetsTab);
 			toggleGroup.RegisterToggle(_sceneTab);
-			_sceneTab.value = true;
+			_sceneTab.SetValueWithoutNotify(true);
 			toggleGroup.OnToggleChanged += HandleGroupChanged;
 
 			_listView = new ListView(_filteredItems, 16, MakeItem, BindItem);
