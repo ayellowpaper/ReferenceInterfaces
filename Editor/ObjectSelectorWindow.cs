@@ -31,12 +31,14 @@ namespace AYellowpaper.Editor
 		private List<ItemInfo> _filteredItems;
 		private ItemInfo _currentItem;
 		private string _searchText;
-		private bool _userCanceled = true;
+		private bool _userCanceled = false;
 		private bool _showSceneObjects = true;
 		private int _undoGroup;
 		private ToolbarSearchField _searchbox;
 		private ListView _listView;
 		private Label _detailsLabel;
+		private Label _detailsIndexLabel;
+		private Label _detailsTypeLabel;
 		private Tab _sceneTab;
 		private Tab _assetsTab;
 
@@ -63,14 +65,41 @@ namespace AYellowpaper.Editor
 			Instance._selectorClosedCallback = onSelectorClosed;
 			Instance._filter = filter;
 			Instance.Init();
-			//Instance.ShowAuxWindow();
-			Instance.Show();
+			Instance.ShowAuxWindow();
+			//Instance.Show();
+		}
+
+		public void SetSearchFilter(string query)
+		{
+			_searchbox.value = query;
 		}
 
 		private void Init()
 		{
 			InitData();
+			InitVisualElements();
+			BindVisualElements();
+			FinishInit();
+		}
 
+		private void InitData()
+		{
+			_undoGroup = Undo.GetCurrentGroup();
+			_searchText = "";
+			_allItems = new List<ItemInfo>();
+			_filteredItems = new List<ItemInfo>();
+
+			_showSceneObjects = true;
+			var target = _editingProperty.objectReferenceValue;
+			if (target != null)
+				_showSceneObjects = !AssetDatabase.Contains(target);
+
+			PopulateItems();
+			FilterItems();
+		}
+
+		private void InitVisualElements()
+		{
 			var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.ayellowpaper.referenceinterfaces/Assets/USS/ObjectSelectorWindow.uss");
 			rootVisualElement.styleSheets.Add(styleSheet);
 
@@ -92,9 +121,19 @@ namespace AYellowpaper.Editor
 			rootVisualElement.Add(_listView);
 
 			_detailsLabel = new Label();
-			_detailsLabel.AddToClassList("details");
-			rootVisualElement.Add(_detailsLabel);
+			_detailsTypeLabel = new Label();
+			_detailsIndexLabel = new Label();
 
+			var details = new VisualElement();
+			details.AddToClassList("details");
+			details.Add(_detailsLabel);
+			details.Add(_detailsIndexLabel);
+			details.Add(_detailsTypeLabel);
+			rootVisualElement.Add(details);
+		}
+
+		private void BindVisualElements()
+		{
 			Tab activeTab = _showSceneObjects ? _sceneTab : _assetsTab;
 			activeTab.SetValueWithoutNotify(true);
 
@@ -103,16 +142,37 @@ namespace AYellowpaper.Editor
 			toggleGroup.RegisterToggle(_sceneTab);
 			toggleGroup.OnToggleChanged += HandleGroupChanged;
 
+			if (GetIndexOfEditingPropertyValue(out var index))
+				_listView.selectedIndex = index;
+		}
+
+		private void FinishInit()
+		{
+			EditorApplication.delayCall += () =>
+			{
+				_listView.Focus();
+				initialized = true;
+			};
+		}
+
+		private bool GetIndexOfEditingPropertyValue(out int index)
+		{
+			index = -1;
 			var targetObject = _editingProperty.objectReferenceValue;
 			if (targetObject)
 			{
 				int instanceID = targetObject.GetInstanceID();
-				var index = _filteredItems.FindIndex(x => x.InstanceID == instanceID);
-				if (index >= 0)
-					_listView.selectedIndex = index;
+				index = _filteredItems.FindIndex(x => x.InstanceID == instanceID);
 			}
+			return index >= 0;
+		}
 
-			FinishInit();
+		private bool GetIndexOfCurrentItem(out int index)
+		{
+			index = -1;
+			if (_currentItem != null)
+				index = _filteredItems.FindIndex(0, x => x.InstanceID == _currentItem.InstanceID);
+			return index >= 0;
 		}
 
 		private void HandleGroupChanged(object sender, Toggle toggle)
@@ -121,6 +181,11 @@ namespace AYellowpaper.Editor
 			_showSceneObjects = !_showSceneObjects;
 			PopulateItems();
 			FilterItems();
+			var list = new List<int>();
+			if (GetIndexOfCurrentItem(out var index))
+				list.Add(index);
+			_listView.SetSelectionWithoutNotify(list);
+			_listView.Focus();
 		}
 
 		private void OnDisable()
@@ -133,22 +198,6 @@ namespace AYellowpaper.Editor
 			Instance = null;
 		}
 
-		private void InitData()
-		{
-			_undoGroup = Undo.GetCurrentGroup();
-			_searchText = "";
-			_allItems = new List<ItemInfo>();
-			_filteredItems = new List<ItemInfo>();
-
-			_showSceneObjects = true;
-			var target = _editingProperty.objectReferenceValue;
-			if (target != null)
-				_showSceneObjects = !AssetDatabase.Contains(target);
-
-			PopulateItems();
-			FilterItems();
-		}
-
 		private void PopulateItems()
 		{
 			_allItems.Clear();
@@ -158,20 +207,6 @@ namespace AYellowpaper.Editor
 			else
 				_allItems.AddRange(FetchAllAssets());
 			_allItems.Sort((item, other) => item.Label.CompareTo(other.Label));
-		}
-
-		private void FinishInit()
-		{
-			EditorApplication.delayCall += () =>
-			{
-				_listView.Focus();
-				initialized = true;
-			};
-		}
-
-		public void SetSearchFilter(string query)
-		{
-			_searchbox.value = query;
 		}
 
 		private void SearchFilterChanged(ChangeEvent<string> evt)
@@ -231,32 +266,46 @@ namespace AYellowpaper.Editor
 
 		private void UpdateDetails()
 		{
-			if (_currentItem == null)
+			GetText(_currentItem, out var infoText, out var indexText, out var typeText);
+
+			void SetText(Label label, string text)
 			{
-				_detailsLabel.text = "";
-				return;
+				label.text = String.IsNullOrEmpty(text) ? "" : text;
 			}
 
-			if (_currentItem.InstanceID == null)
+			SetText(_detailsLabel, infoText);
+			SetText(_detailsIndexLabel, indexText);
+			SetText(_detailsTypeLabel, typeText);
+		}
+
+		private static void GetText(ItemInfo itemInfo, out string text, out string indexText, out string typeText)
+		{
+			text = null;
+			indexText = null;
+			typeText = null;
+
+			if (itemInfo == null) return;
+			if (itemInfo.InstanceID == null)
 			{
-				_detailsLabel.text = _currentItem.Label;
+				text = itemInfo.Label;
 				return;
 			}
-
-			var obj = EditorUtility.InstanceIDToObject((int)_currentItem.InstanceID);
+			var obj = EditorUtility.InstanceIDToObject((int)itemInfo.InstanceID);
 			if (AssetDatabase.Contains(obj))
 			{
-				_detailsLabel.text = AssetDatabase.GetAssetPath(obj);
+				text = AssetDatabase.GetAssetPath(obj);
 			}
 			else
 			{
 				var transform = (obj is GameObject go) ? go.transform : (obj as Component).transform;
 				int compIndex = Array.IndexOf(transform.gameObject.GetComponents(typeof(Component)), obj);
-				_detailsLabel.text = $"{GetTransformPath(transform)} [{compIndex}]";
+				text = $"{GetTransformPath(transform)}";
+				indexText = $"[{compIndex}]";
 			}
+			typeText = $"({obj.GetType().Name})";
 		}
 
-		private string GetTransformPath(Transform transform)
+		private static string GetTransformPath(Transform transform)
 		{
 			StringBuilder sb = new StringBuilder();
 			sb.Append(transform.name);

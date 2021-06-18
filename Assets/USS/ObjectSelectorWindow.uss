@@ -63,6 +63,7 @@ ToolbarSearchField
 	border-width: 1px 0 0 0;
 	padding: 4px 0px 2px 20px;
 	font-size: 12px;
+	flex-direction: row;
 }
 
 .list-item
