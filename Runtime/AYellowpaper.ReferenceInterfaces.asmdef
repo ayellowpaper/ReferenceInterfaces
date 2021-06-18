@@ -1,6 +1,5 @@
 {
-    "name": "Zelude.PackageTemplate",
-    "rootNamespace": "",
+    "name": "AYellowpaper.ReferenceInterfaces",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

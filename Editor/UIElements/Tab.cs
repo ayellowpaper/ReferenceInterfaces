@@ -4,9 +4,9 @@ using UnityEngine;
 using UnityEditor.UIElements;
 using UnityEngine.UIElements;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
-	public class Tab : Toggle
+	internal class Tab : Toggle
 	{
 		public Tab(string text) : base()
 		{

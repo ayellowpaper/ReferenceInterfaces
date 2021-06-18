@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
-	public class ToggleGroup
+	internal class ToggleGroup
 	{
 		private List<Toggle> _toggles = new List<Toggle>();
 

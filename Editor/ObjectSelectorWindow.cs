@@ -10,7 +10,7 @@ using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
 using UnityEngine;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
 	internal class ObjectSelectorWindow : EditorWindow
 	{
@@ -63,15 +63,15 @@ namespace Zelude.Editor
 			Instance._selectorClosedCallback = onSelectorClosed;
 			Instance._filter = filter;
 			Instance.Init();
-			Instance.ShowAuxWindow();
-			//Instance.Show();
+			//Instance.ShowAuxWindow();
+			Instance.Show();
 		}
 
 		private void Init()
 		{
 			InitData();
 
-			var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.zelude.objectwithinterface/Assets/USS/ObjectSelectorWindow.uss");
+			var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.ayellowpaper.referenceinterfaces/Assets/USS/ObjectSelectorWindow.uss");
 			rootVisualElement.styleSheets.Add(styleSheet);
 
 			_searchbox = new ToolbarSearchField();

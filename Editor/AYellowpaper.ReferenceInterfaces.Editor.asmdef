@@ -1,6 +1,5 @@
 {
-    "name": "ZeludeEditor.PackageTemplate",
-    "rootNamespace": "",
+    "name": "AYellowpaper.ReferenceInterfaces.Editor",
     "references": [
         "GUID:31976cc9e85bdd9459e856fcb40d0d50"
     ],

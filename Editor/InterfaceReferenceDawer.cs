@@ -6,12 +6,13 @@ using UnityEditor;
 using System;
 using UnityEngine.UIElements;
 using System.Linq;
+using AYellowpaper;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
-	[CustomPropertyDrawer(typeof(InterfaceObject<>))]
-	[CustomPropertyDrawer(typeof(InterfaceObject<,>))]
-	public class InterfaceObjectDawer : PropertyDrawer
+	[CustomPropertyDrawer(typeof(InterfaceReference<>))]
+	[CustomPropertyDrawer(typeof(InterfaceReference<,>))]
+	public class InterfaceReferenceDawer : PropertyDrawer
 	{
 		private const string _fieldName = "_underlyingValue";
 
@@ -20,13 +21,13 @@ namespace Zelude.Editor
 			var prop = property.FindPropertyRelative(_fieldName);
 			GetObjectAndInterfaceType(fieldInfo.FieldType, out var objectType, out var interfaceType);
 			InterfaceObjectArguments args = new InterfaceObjectArguments(objectType, interfaceType);
-			InterfaceObjectUtility.OnGUI(position, prop, label, args);
+			InterfaceReferenceUtility.OnGUI(position, prop, label, args);
 		}
 
 		private static void GetObjectAndInterfaceType(Type fieldType, out Type objectType, out Type interfaceType)
 		{
 			var genericType = fieldType.GetGenericTypeDefinition();
-			if (genericType == typeof(InterfaceObject<,>))
+			if (genericType == typeof(InterfaceReference<,>))
 			{
 				var types = fieldType.GetGenericArguments();
 				interfaceType = types[0];

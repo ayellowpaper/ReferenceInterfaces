@@ -3,8 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Zelude
+namespace AYellowpaper
 {
+	[AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
 	public class RequireInterfaceAttribute : PropertyAttribute
 	{
 		public readonly Type InterfaceType;

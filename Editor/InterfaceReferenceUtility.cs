@@ -7,9 +7,9 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
-	public static class InterfaceObjectUtility
+	internal static class InterfaceReferenceUtility
 	{
 		private const string _fieldName = "_underlyingValue";
 

@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using Zelude;
+using AYellowpaper;
 
-namespace Zelude.Editor
+namespace AYellowpaper.Editor
 {
 	[CustomPropertyDrawer(typeof(RequireInterfaceAttribute))]
 	public class RequireInterfaceAttributeDrawer : PropertyDrawer
@@ -12,7 +12,7 @@ namespace Zelude.Editor
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			InterfaceObjectArguments args = new InterfaceObjectArguments(fieldInfo.FieldType, _requireInterfaceAttribute.InterfaceType);
-			InterfaceObjectUtility.OnGUI(position, property, label, args);
+			InterfaceReferenceUtility.OnGUI(position, property, label, args);
 		}
 	}
 }

@@ -1,9 +1,9 @@
 {
-  "name": "com.zelude.objectwithinterface",
+  "name": "com.ayellowpaper.referenceinterfaces",
   "version": "1.0.0",
-  "displayName": "Object with interface",
-  "description": "Allows you to easily reference objects with interfaces in the inspector.",
-  "unity": "2020.3",
+  "displayName": "Reference Interfaces",
+  "description": "Allows you to easily reference Unity Objects with Interfaces in the inspector.",
+  "unity": "2020.1",
   "keywords": [
     "package",
     "template"
