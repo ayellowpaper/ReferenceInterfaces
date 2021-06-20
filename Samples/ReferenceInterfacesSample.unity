@@ -168,7 +168,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ReferenceWithAttribute: {fileID: 1108131491}
   InterfaceReference:
-    _underlyingValue: {fileID: 1489924138}
+    _underlyingValue: {fileID: 1489924140}
   InterfaceReferenceWithConstraint:
     _underlyingValue: {fileID: 11400000, guid: 4fcf980c632de154b9f91c4e6a8ada6c, type: 2}
 --- !u!1 &506233364

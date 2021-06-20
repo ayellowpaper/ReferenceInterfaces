@@ -12,6 +12,7 @@ namespace AYellowpaper.Editor
 	internal static class InterfaceReferenceUtility
 	{
 		private const string _fieldName = "_underlyingValue";
+		private const float _helpBoxHeight = 24;
 
 		private static GUIStyle _style;
 		private static bool _isOpeningQueued = false;
@@ -29,7 +30,18 @@ namespace AYellowpaper.Editor
 			}
 
 			var prevValue = property.objectReferenceValue;
+			position.height = EditorGUIUtility.singleLineHeight;
+			// change visuals if the assigned value doesn't implement the interface (e.g. after removing the interface from the target)
+			if (IsAssignedAndHasWrongInterface(prevValue, args))
+			{
+				var helpBoxPosition = position;
+				helpBoxPosition.y += position.height;
+				helpBoxPosition.height = _helpBoxHeight;
+				EditorGUI.HelpBox(helpBoxPosition, $"Object {prevValue.name} needs to implement the required interface {args.InterfaceType}.", MessageType.Error);
+				GUI.backgroundColor = Color.red;
+			}
 
+			// disable of not assignable
 			var prevEnabledState = GUI.enabled;
 			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args))
 				GUI.enabled = false;
@@ -38,9 +50,11 @@ namespace AYellowpaper.Editor
 			EditorGUI.ObjectField(position, property, args.ObjectType, label);
 			if (EditorGUI.EndChangeCheck())
 			{
-				var newVal = property.objectReferenceValue;
-				if (!(newVal == null || CanAssign(newVal, args)))
+				// assign the value from the GameObject if it's dragged in, or reset if the value isn't assignable
+				var newVal = GetComponentInGameObjectOrDefault(property.objectReferenceValue, args);
+				if (newVal != null && !CanAssign(newVal, args))
 					property.objectReferenceValue = prevValue;
+				property.objectReferenceValue = newVal;
 			}
 
 			GUI.enabled = prevEnabledState;
@@ -65,6 +79,13 @@ namespace AYellowpaper.Editor
 			}
 		}
 
+		public static float GetPropertyHeight(SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
+		{
+			if (IsAssignedAndHasWrongInterface(property.objectReferenceValue, args))
+				return EditorGUIUtility.singleLineHeight + _helpBoxHeight;
+			return EditorGUIUtility.singleLineHeight;
+		}
+
 		public static bool IsAsset(Type type)
 		{
 			return !(type == typeof(GameObject) || type == typeof(Component));
@@ -82,6 +103,9 @@ namespace AYellowpaper.Editor
 				if (args.ObjectType.IsAssignableFrom(type))
 					sb.Append("t:" + type.FullName + " ");
 			}
+			// this makes sure we don't find anything if there's no type supplied
+			if (sb.Length == 0)
+				sb.Append("t:");
 
 			var filter = new ObjectSelectorFilter(sb.ToString(), obj => CanAssign(obj, args));
 			ObjectSelectorWindow.Show(property, obj => { property.objectReferenceValue = obj; property.serializedObject.ApplyModifiedProperties(); }, (obj, success) => { if (success) property.objectReferenceValue = obj; }, filter);
@@ -90,6 +114,15 @@ namespace AYellowpaper.Editor
 			ObjectSelectorWindow.Instance.titleContent = content;
 			_isOpeningQueued = false;
 		}
+
+		private static UnityEngine.Object GetComponentInGameObjectOrDefault(UnityEngine.Object obj, InterfaceObjectArguments args)
+		{
+			if (obj is GameObject go && go.TryGetComponent(args.InterfaceType, out var comp))
+				return comp;
+			return obj;
+		}
+
+		private static bool IsAssignedAndHasWrongInterface(UnityEngine.Object obj, InterfaceObjectArguments args) => obj != null && !args.InterfaceType.IsAssignableFrom(obj.GetType());
 
 		private static bool CanAssign(UnityEngine.Object[] objects, InterfaceObjectArguments args) => objects.All(obj => CanAssign(obj, args));
 

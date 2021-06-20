@@ -14,5 +14,11 @@ namespace AYellowpaper.Editor
 			InterfaceObjectArguments args = new InterfaceObjectArguments(fieldInfo.FieldType, _requireInterfaceAttribute.InterfaceType);
 			InterfaceReferenceUtility.OnGUI(position, property, label, args);
 		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			InterfaceObjectArguments args = new InterfaceObjectArguments(fieldInfo.FieldType, _requireInterfaceAttribute.InterfaceType);
+			return InterfaceReferenceUtility.GetPropertyHeight(property, label, args);
+		}
 	}
 }

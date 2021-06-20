@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,7 +21,14 @@ namespace AYellowpaper
 		/// </summary>
 		public TInterface Value
 		{
-			get => _underlyingValue as TInterface;
+			get
+			{
+				if (_underlyingValue == null)
+					return null;
+				var @interface = _underlyingValue as TInterface;
+				Debug.Assert(@interface != null, $"{_underlyingValue} needs to implement interface {nameof(TInterface)}.");
+				return @interface;
+			}
 			set
 			{
 				if (value == null)

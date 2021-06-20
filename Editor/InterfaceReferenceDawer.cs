@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
@@ -19,9 +20,13 @@ namespace AYellowpaper.Editor
 		public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
 		{
 			var prop = property.FindPropertyRelative(_fieldName);
-			GetObjectAndInterfaceType(fieldInfo.FieldType, out var objectType, out var interfaceType);
-			InterfaceObjectArguments args = new InterfaceObjectArguments(objectType, interfaceType);
-			InterfaceReferenceUtility.OnGUI(position, prop, label, args);
+			InterfaceReferenceUtility.OnGUI(position, prop, label, GetArguments(fieldInfo));
+		}
+
+		public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+		{
+			var prop = property.FindPropertyRelative(_fieldName);
+			return InterfaceReferenceUtility.GetPropertyHeight(prop, label, GetArguments(fieldInfo));
 		}
 
 		private static void GetObjectAndInterfaceType(Type fieldType, out Type objectType, out Type interfaceType)
@@ -36,6 +41,12 @@ namespace AYellowpaper.Editor
 			}
 			objectType = typeof(UnityEngine.Object);
 			interfaceType = fieldType.GetGenericArguments()[0];
+		}
+
+		private static InterfaceObjectArguments GetArguments(FieldInfo fieldInfo)
+		{
+			GetObjectAndInterfaceType(fieldInfo.FieldType, out var objectType, out var interfaceType);
+			return new InterfaceObjectArguments(objectType, interfaceType);
 		}
 	}
 }
