@@ -100,7 +100,7 @@ namespace AYellowpaper.Editor
 
 		private void InitVisualElements()
 		{
-			var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Packages/com.ayellowpaper.referenceinterfaces/Assets/USS/ObjectSelectorWindow.uss");
+			var styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>("Assets/ReferenceInterfaces/Assets/USS/ObjectSelectorWindow.uss");
 			rootVisualElement.styleSheets.Add(styleSheet);
 
 			_searchbox = new ToolbarSearchField();
