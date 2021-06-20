@@ -43,7 +43,7 @@ namespace AYellowpaper.Editor
 
 			// disable of not assignable
 			var prevEnabledState = GUI.enabled;
-			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args))
+			if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args, true))
 				GUI.enabled = false;
 
 			EditorGUI.BeginChangeCheck();
@@ -124,9 +124,14 @@ namespace AYellowpaper.Editor
 
 		private static bool IsAssignedAndHasWrongInterface(UnityEngine.Object obj, InterfaceObjectArguments args) => obj != null && !args.InterfaceType.IsAssignableFrom(obj.GetType());
 
-		private static bool CanAssign(UnityEngine.Object[] objects, InterfaceObjectArguments args) => objects.All(obj => CanAssign(obj, args));
+		private static bool CanAssign(UnityEngine.Object[] objects, InterfaceObjectArguments args, bool lookIntoGameObject = false) => objects.All(obj => CanAssign(obj, args, lookIntoGameObject));
 
-		private static bool CanAssign(UnityEngine.Object obj, InterfaceObjectArguments args) => args.InterfaceType.IsAssignableFrom(obj.GetType()) && args.ObjectType.IsAssignableFrom(obj.GetType());
+		private static bool CanAssign(UnityEngine.Object obj, InterfaceObjectArguments args, bool lookIntoGameObject = false)
+		{
+			if (lookIntoGameObject)
+				obj = GetComponentInGameObjectOrDefault(obj, args);
+			return args.InterfaceType.IsAssignableFrom(obj.GetType()) && args.ObjectType.IsAssignableFrom(obj.GetType());
+		}
 	}
 
 	public struct InterfaceObjectArguments
