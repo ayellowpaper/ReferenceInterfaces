@@ -31,6 +31,7 @@ namespace AYellowpaper.Editor
 
 			var prevValue = property.objectReferenceValue;
 			position.height = EditorGUIUtility.singleLineHeight;
+			var prevColor = GUI.backgroundColor;
 			// change visuals if the assigned value doesn't implement the interface (e.g. after removing the interface from the target)
 			if (IsAssignedAndHasWrongInterface(prevValue, args))
 			{
@@ -57,6 +58,7 @@ namespace AYellowpaper.Editor
 				property.objectReferenceValue = newVal;
 			}
 
+			GUI.color = prevColor;
 			GUI.enabled = prevEnabledState;
 
 			var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
