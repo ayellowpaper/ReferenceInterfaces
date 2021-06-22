@@ -1,5 +1,5 @@
 {
-    "name": "AYellowpaper.ReferenceInterfaces.Editor",
+    "name": "AYellowpaper.SerializeInterfaces.Editor",
     "references": [
         "GUID:31976cc9e85bdd9459e856fcb40d0d50"
     ],
