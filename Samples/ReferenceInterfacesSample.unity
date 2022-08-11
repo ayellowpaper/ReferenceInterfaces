@@ -166,11 +166,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf61f45282137eb4aa9be9002ec3a4d4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ReferenceWithAttribute: {fileID: 1108131491}
-  InterfaceReference:
-    _underlyingValue: {fileID: 1489924139}
-  InterfaceReferenceWithConstraint:
-    _underlyingValue: {fileID: 11400000, guid: 4fcf980c632de154b9f91c4e6a8ada6c, type: 2}
+  ReferenceWithAttributeArray:
+  - {fileID: 1108131491}
+  - {fileID: 1489924140}
+  - {fileID: 1489924138}
+  - {fileID: 1489924140}
+  ReferenceArray:
+  - _underlyingValue: {fileID: 0}
+  ReferenceWithAttributeList:
+  - {fileID: 11400000, guid: 4fcf980c632de154b9f91c4e6a8ada6c, type: 2}
+  - {fileID: 1108131491}
+  ReferenceList:
+  - _underlyingValue: {fileID: 0}
+  ReferenceRestrictedToScriptableObject:
+    _underlyingValue: {fileID: 0}
+  ReferenceRestrictedToMonoBehaviour:
+    _underlyingValue: {fileID: 0}
 --- !u!1 &506233364
 GameObject:
   m_ObjectHideFlags: 0

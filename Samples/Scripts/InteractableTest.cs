@@ -6,16 +6,27 @@ namespace AYellowpaper.Samples
 {
 	public class InteractableTest : MonoBehaviour
 	{
+		// Arrays
 		[RequireInterface(typeof(IInteractable))]
-		public MonoBehaviour ReferenceWithAttribute;
-		public InterfaceReference<IInteractable> InterfaceReference;
-		public InterfaceReference<IInteractable, ScriptableObject> InterfaceReferenceWithConstraint;
+		public MonoBehaviour[] ReferenceWithAttributeArray;
 
-		void Awake()
-		{
-			(ReferenceWithAttribute as IInteractable).Interact();
-			InterfaceReference.Value.Interact();
-			InterfaceReferenceWithConstraint.Value.Interact();
-		}
+		public InterfaceReference<IInteractable>[] ReferenceArray;
+
+		// Lists
+		[RequireInterface(typeof(IInteractable))]
+		public List<Object> ReferenceWithAttributeList;
+
+		public List<InterfaceReference<IInteractable>> ReferenceList;
+
+		// Fields
+		public InterfaceReference<IInteractable, ScriptableObject> ReferenceRestrictedToScriptableObject;
+		public InterfaceReference<IInteractable, MonoBehaviour> ReferenceRestrictedToMonoBehaviour;
+
+		[RequireInterface(typeof(IInteractable))]
+		public ScriptableObject AttributeRestrictedToScriptableObject;
+		[RequireInterface(typeof(IInteractable))]
+		public MonoBehaviour AttributeRestrictedToMonoBehaviour;
 	}
 }
+
+
