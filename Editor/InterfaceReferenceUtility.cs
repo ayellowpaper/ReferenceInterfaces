@@ -15,15 +15,7 @@ namespace AYellowpaper.Editor
 
         public static void OnGUI(Rect position, SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
         {
-            if (_style == null)
-            {
-                _style = new GUIStyle(EditorStyles.label);
-                var objectFieldStyle = EditorStyles.objectField;
-                _style.font = objectFieldStyle.font;
-                _style.fontSize = objectFieldStyle.fontSize;
-                _style.fontStyle = objectFieldStyle.fontStyle;
-                _style.alignment = TextAnchor.MiddleRight;
-            }
+            InitializeStyleIfNeeded();
 
             var prevValue = property.objectReferenceValue;
             position.height = EditorGUIUtility.singleLineHeight;
@@ -31,14 +23,11 @@ namespace AYellowpaper.Editor
             // change visuals if the assigned value doesn't implement the interface (e.g. after removing the interface from the target)
             if (IsAssignedAndHasWrongInterface(prevValue, args))
             {
-                var helpBoxPosition = position;
-                helpBoxPosition.y += position.height;
-                helpBoxPosition.height = _helpBoxHeight;
-                EditorGUI.HelpBox(helpBoxPosition, $"Object {prevValue.name} needs to implement the required interface {args.InterfaceType}.", MessageType.Error);
+                ShowWrongInterfaceErrorBox(position, prevValue, args);
                 GUI.backgroundColor = Color.red;
             }
 
-            // disable of not assignable from drag and drop
+            // disable if not assignable from drag and drop
             var prevEnabledState = GUI.enabled;
             if (Event.current.type == EventType.DragUpdated && position.Contains(Event.current.mousePosition) && GUI.enabled && !CanAssign(DragAndDrop.objectReferences, args, true))
                 GUI.enabled = false;
@@ -48,7 +37,7 @@ namespace AYellowpaper.Editor
             if (EditorGUI.EndChangeCheck())
             {
                 // assign the value from the GameObject if it's dragged in, or reset if the value isn't assignable
-                var newVal = GetComponentInGameObjectOrDefault(property.objectReferenceValue, args);
+                var newVal = GetClosestAssignableComponent(property.objectReferenceValue, args);
                 if (newVal != null && !CanAssign(newVal, args))
                     property.objectReferenceValue = prevValue;
                 property.objectReferenceValue = newVal;
@@ -58,14 +47,20 @@ namespace AYellowpaper.Editor
             GUI.enabled = prevEnabledState;
 
             var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
-            if (Event.current.type == EventType.Repaint)
-            {
-                var displayString = $"({ObjectNames.NicifyVariableName(args.InterfaceType.Name)})";
-                var interfaceLabelPosition = position;
-                interfaceLabelPosition.width -= 22;
-                _style.Draw(interfaceLabelPosition, new GUIContent(displayString), controlID, DragAndDrop.activeControlID == controlID, position.Contains(Event.current.mousePosition));
-            }
+            DrawInterfaceNameLabel(position, $"({ObjectNames.NicifyVariableName(args.InterfaceType.Name)})", controlID);
+            ReplaceObjectPickerForControl(property, args, controlID);
+        }
 
+        private static void ShowWrongInterfaceErrorBox(Rect position, UnityEngine.Object prevValue, InterfaceObjectArguments args)
+        {
+            var helpBoxPosition = position;
+            helpBoxPosition.y += position.height;
+            helpBoxPosition.height = _helpBoxHeight;
+            EditorGUI.HelpBox(helpBoxPosition, $"Object {prevValue.name} needs to implement the required interface {args.InterfaceType}.", MessageType.Error);
+        }
+
+        private static void ReplaceObjectPickerForControl(SerializedProperty property, InterfaceObjectArguments args, int controlID)
+        {
             var currentObjectPickerID = EditorGUIUtility.GetObjectPickerControlID();
             if (controlID == currentObjectPickerID && _isOpeningQueued == false)
             {
@@ -75,6 +70,29 @@ namespace AYellowpaper.Editor
                     EditorApplication.delayCall += () => OpenDelayed(property, args);
                 }
             }
+        }
+
+        private static void DrawInterfaceNameLabel(Rect position, string displayString, int controlID)
+        {
+            if (Event.current.type == EventType.Repaint)
+            {
+                var interfaceLabelPosition = position;
+                interfaceLabelPosition.width -= 22;
+                _style.Draw(interfaceLabelPosition, new GUIContent(displayString), controlID, DragAndDrop.activeControlID == controlID, position.Contains(Event.current.mousePosition));
+            }
+        }
+
+        private static void InitializeStyleIfNeeded()
+        {
+            if (_style != null)
+                return;
+
+            _style = new GUIStyle(EditorStyles.label);
+            var objectFieldStyle = EditorStyles.objectField;
+            _style.font = objectFieldStyle.font;
+            _style.fontSize = objectFieldStyle.fontSize;
+            _style.fontStyle = objectFieldStyle.fontStyle;
+            _style.alignment = TextAnchor.MiddleRight;
         }
 
         public static float GetPropertyHeight(SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
@@ -113,13 +131,21 @@ namespace AYellowpaper.Editor
             _isOpeningQueued = false;
         }
 
-        private static UnityEngine.Object GetComponentInGameObjectOrDefault(UnityEngine.Object obj, InterfaceObjectArguments args)
+        /// <summary>
+        /// Gets itself if assignable, otherwise will get the root gameobject if it belongs to one, and return the first possible component
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private static UnityEngine.Object GetClosestAssignableComponent(UnityEngine.Object obj, InterfaceObjectArguments args)
         {
+            if (CanAssign(obj, args))
+                return obj;
             if (obj is GameObject go && TryFindSuitableComponent(go, args, out Component foundComponent))
                 return foundComponent;
             if (obj is Component comp && TryFindSuitableComponent(comp.gameObject, args, out foundComponent))
                 return foundComponent;
-            return obj;
+            return null;
         }
 
         private static bool TryFindSuitableComponent(GameObject go, InterfaceObjectArguments args, out Component component)
@@ -150,7 +176,7 @@ namespace AYellowpaper.Editor
             if (args.InterfaceType.IsAssignableFrom(obj.GetType()) && args.ObjectType.IsAssignableFrom(obj.GetType()))
                 return true;
             if (lookIntoGameObject)
-                return CanAssign(GetComponentInGameObjectOrDefault(obj, args), args);
+                return CanAssign(GetClosestAssignableComponent(obj, args), args);
             return false;
         }
     }
