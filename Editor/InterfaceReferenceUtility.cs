@@ -10,7 +10,7 @@ namespace AYellowpaper.Editor
     {
         private const float _helpBoxHeight = 24;
 
-        private static GUIStyle _style;
+        private static GUIStyle _normalInterfaceLabelStyle;
         private static bool _isOpeningQueued = false;
 
         public static void OnGUI(Rect position, SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
@@ -47,7 +47,8 @@ namespace AYellowpaper.Editor
             GUI.enabled = prevEnabledState;
 
             var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
-            DrawInterfaceNameLabel(position, $"({ObjectNames.NicifyVariableName(args.InterfaceType.Name)})", controlID);
+            bool isHovering = position.Contains(Event.current.mousePosition);
+            DrawInterfaceNameLabel(position, prevValue == null || isHovering ? $"({args.InterfaceType.Name})" : "*", controlID, isHovering);
             ReplaceObjectPickerForControl(property, args, controlID);
         }
 
@@ -72,27 +73,36 @@ namespace AYellowpaper.Editor
             }
         }
 
-        private static void DrawInterfaceNameLabel(Rect position, string displayString, int controlID)
+        private static void DrawInterfaceNameLabel(Rect position, string displayString, int controlID, bool isOverlayed)
         {
             if (Event.current.type == EventType.Repaint)
             {
+                const int additionalLeftWidth = 3;
+                const int verticalIndent = 1;
+                var content = EditorGUIUtility.TrTextContent(displayString);
+                var size = _normalInterfaceLabelStyle.CalcSize(content);
                 var interfaceLabelPosition = position;
-                interfaceLabelPosition.width -= 22;
-                _style.Draw(interfaceLabelPosition, new GUIContent(displayString), controlID, DragAndDrop.activeControlID == controlID, position.Contains(Event.current.mousePosition));
+                interfaceLabelPosition.width = size.x + additionalLeftWidth;
+                interfaceLabelPosition.x += position.width - interfaceLabelPosition.width - 18;
+                interfaceLabelPosition.height = interfaceLabelPosition.height - verticalIndent * 2;
+                interfaceLabelPosition.y += verticalIndent;
+                _normalInterfaceLabelStyle.Draw(interfaceLabelPosition, EditorGUIUtility.TrTextContent(displayString), controlID, DragAndDrop.activeControlID == controlID, false);
             }
         }
 
         private static void InitializeStyleIfNeeded()
         {
-            if (_style != null)
+            if (_normalInterfaceLabelStyle != null)
                 return;
 
-            _style = new GUIStyle(EditorStyles.label);
+            _normalInterfaceLabelStyle = new GUIStyle(EditorStyles.label);
             var objectFieldStyle = EditorStyles.objectField;
-            _style.font = objectFieldStyle.font;
-            _style.fontSize = objectFieldStyle.fontSize;
-            _style.fontStyle = objectFieldStyle.fontStyle;
-            _style.alignment = TextAnchor.MiddleRight;
+            _normalInterfaceLabelStyle.font = objectFieldStyle.font;
+            _normalInterfaceLabelStyle.fontSize = objectFieldStyle.fontSize;
+            _normalInterfaceLabelStyle.fontStyle = objectFieldStyle.fontStyle;
+            _normalInterfaceLabelStyle.alignment = TextAnchor.MiddleRight;
+            _normalInterfaceLabelStyle.padding = new RectOffset(0, 2, 0, 0);
+            _normalInterfaceLabelStyle.normal.background = (Texture2D)Resources.Load("InterfaceLabelBackground");
         }
 
         public static float GetPropertyHeight(SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
@@ -141,10 +151,13 @@ namespace AYellowpaper.Editor
         {
             if (CanAssign(obj, args))
                 return obj;
-            if (obj is GameObject go && TryFindSuitableComponent(go, args, out Component foundComponent))
-                return foundComponent;
-            if (obj is Component comp && TryFindSuitableComponent(comp.gameObject, args, out foundComponent))
-                return foundComponent;
+            if (args.ObjectType.IsSubclassOf(typeof(Component)))
+            {
+                if (obj is GameObject go && TryFindSuitableComponent(go, args, out Component foundComponent))
+                    return foundComponent;
+                if (obj is Component comp && TryFindSuitableComponent(comp.gameObject, args, out foundComponent))
+                    return foundComponent;
+            }
             return null;
         }
 
