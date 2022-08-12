@@ -48,7 +48,7 @@ namespace AYellowpaper.Editor
 
             var controlID = GUIUtility.GetControlID(FocusType.Passive) - 1;
             bool isHovering = position.Contains(Event.current.mousePosition);
-            DrawInterfaceNameLabel(position, prevValue == null || isHovering ? $"({args.InterfaceType.Name})" : "*", controlID, isHovering);
+            DrawInterfaceNameLabel(position, prevValue == null || isHovering ? $"({args.InterfaceType.Name})" : "*", controlID);
             ReplaceObjectPickerForControl(property, args, controlID);
         }
 
@@ -73,7 +73,7 @@ namespace AYellowpaper.Editor
             }
         }
 
-        private static void DrawInterfaceNameLabel(Rect position, string displayString, int controlID, bool isOverlayed)
+        private static void DrawInterfaceNameLabel(Rect position, string displayString, int controlID)
         {
             if (Event.current.type == EventType.Repaint)
             {
