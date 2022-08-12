@@ -102,7 +102,10 @@ namespace AYellowpaper.Editor
             _normalInterfaceLabelStyle.fontStyle = objectFieldStyle.fontStyle;
             _normalInterfaceLabelStyle.alignment = TextAnchor.MiddleRight;
             _normalInterfaceLabelStyle.padding = new RectOffset(0, 2, 0, 0);
-            _normalInterfaceLabelStyle.normal.background = (Texture2D)Resources.Load("InterfaceLabelBackground");
+            var texture = new Texture2D(1, 1);
+            texture.SetPixel(0, 0, new Color(40/255f, 40/255f, 40/255f));
+            texture.Apply();
+            _normalInterfaceLabelStyle.normal.background = texture;
         }
 
         public static float GetPropertyHeight(SerializedProperty property, GUIContent label, InterfaceObjectArguments args)
